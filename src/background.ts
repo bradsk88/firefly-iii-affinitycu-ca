@@ -1,6 +1,6 @@
 import {createURLSearchParams, generateCodeChallenge, generateCodeVerifier} from './utils'
-import {AccountsApi, Configuration} from "firefly-iii-typescript-sdk-fetch";
-import {FetchParams, RequestContext} from "firefly-iii-typescript-sdk-fetch/dist/runtime";
+import {AccountsApi, Configuration, ShortAccountTypeProperty} from "firefly-iii-typescript-sdk-fetch";
+import {AccountStore} from "firefly-iii-typescript-sdk-fetch/dist/models";
 
 const backgroundLog = (string: string): void => {
     chrome.runtime.sendMessage({
@@ -113,10 +113,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             backgroundLog(`[error] ${error}`)
         })
     } else if (message.action === "store_transactions") {
-        backgroundLog('storing tx')
+        const data: AccountStore[] = message.value;
+
         getBearerToken().then(token => {
             // TODO: Initialize once
-            new AccountsApi(
+            let api = new AccountsApi(
                 new Configuration({
                     basePath: "http://192.168.0.124:4575",
                     accessToken: `Bearer ${token}`,
@@ -126,7 +127,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                     },
                     fetchApi: self.fetch.bind(self),
                 }),
-            ).listAccount({}).then((r: any) => backgroundLog(JSON.stringify(r)));
+            );
+            // api.listAccount({}).then((r: any) => backgroundLog(JSON.stringify(r)));
+            data.forEach(accountStore => api.storeAccount({accountStore: accountStore}));
         })
     } else {
         return false;

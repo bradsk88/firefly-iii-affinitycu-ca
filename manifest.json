@@ -1,7 +1,7 @@
 {
-  "name": "My Firefly III OAuth2 Extension",
+  "name": "Affinity CU -> Firefly III",
   "version": "1.0",
-  "description": "Description goes here",
+  "description": "Scrapes account and transaction data from Affinity Credit Union (Canada) into Firefly III",
   "permissions": [
     "identity",
     "clipboardWrite",
@@ -16,10 +16,13 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://*.example.com/*"],
-      "js": ["./dist/example_dot_com_scraper.js"]
+      "matches": ["https://personal.affinitycu.ca/Accounts/Summary"],
+      "js": ["./dist/accounts.js"]
     }
   ],
   "devtools_page": "devtools.html",
-  "manifest_version": 3
+  "manifest_version": 3,
+  "icons": {
+    "128": "icon.png"
+  }
 }
