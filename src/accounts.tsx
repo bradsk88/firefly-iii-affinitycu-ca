@@ -23,6 +23,7 @@ function scrapeAccounts(): AccountStore[] {
             accountNumber: accountNumber,
             type: ShortAccountTypeProperty.Asset,
             accountRole: AccountRoleProperty.DefaultAsset,
+            currencyCode: "CAD",
         };
         return as;
     });
