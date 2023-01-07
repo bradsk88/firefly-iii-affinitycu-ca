@@ -29,7 +29,7 @@ function scrapeAccounts(): AccountStore[] {
     });
 }
 
-window.onload = () => {
+window.addEventListener("load",function(event) {
     const button = document.createElement("button");
     button.textContent = "Export to Firefly III"
     button.addEventListener("click", () => {
@@ -45,4 +45,4 @@ window.onload = () => {
     }, false);
     button.classList.add("btn-md", "btn-tertiary", "w-135-px", "d-flex-important", "my-auto", "print-hide")
     document.getElementsByClassName('content-main-header main-header-related')[0]?.append(button);
-};
+});

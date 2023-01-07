@@ -2,6 +2,7 @@ import {createURLSearchParams, generateCodeChallenge, generateCodeVerifier} from
 import {AccountsApi, Configuration, TransactionsApi, TransactionStore} from "firefly-iii-typescript-sdk-fetch";
 import {AccountArray, AccountStore} from "firefly-iii-typescript-sdk-fetch/dist/models";
 import {AccountRead} from "firefly-iii-typescript-sdk-fetch/dist/models/AccountRead";
+import {OpeningBalance} from "./opening";
 
 const backgroundLog = (string: string): void => {
     chrome.runtime.sendMessage({
@@ -147,6 +148,33 @@ async function storeTransactions(
     })
 }
 
+async function storeOpeningBalance(
+    data: OpeningBalance,
+) {
+    getBearerToken().then(token => {
+        // TODO: Initialize once
+        let api = new AccountsApi(
+            new Configuration({
+                basePath: "http://192.168.0.124:4575",
+                accessToken: `Bearer ${token}`,
+                headers: {
+                    "Content-Type": "application/json",
+                    "accept": "application/vnd.api+json",
+                },
+                fetchApi: self.fetch.bind(self),
+            }),
+        );
+        api.updateAccount({
+            id: data.accountNumber,
+            accountUpdate: {
+                name: data.accountName,
+                openingBalance: `${data.balance}`,
+                openingBalanceDate: data.date,
+            }
+        })
+    })
+}
+
 
 export async function listAccounts(): Promise<AccountRead[]> {
     return getBearerToken().then(token => doListAccounts(token));
@@ -193,6 +221,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             backgroundLog(`[error] ${error}`)
         });
 
+    } else if (message.action === "store_opening") {
+        patchDatesOB(message.value).then(
+            obStore => storeOpeningBalance(obStore),
+        ).catch((error) => {
+            backgroundLog(`[error] ${error}`)
+        });
+
     } else if (message.action === "list_accounts") {
         listAccounts().then(accounts => sendResponse(accounts));
         return true;
@@ -211,4 +246,9 @@ async function patchDates(data: TransactionStore[]): Promise<TransactionStore[]>
         })
         return ts;
     });
+}
+
+async function patchDatesOB(data: OpeningBalance): Promise<OpeningBalance> {
+    data.date = new Date(data.date);
+    return data;
 }

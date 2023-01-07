@@ -57,7 +57,10 @@ async function scrapeTransactions(
         }
         return tx;
     });
-    return data;
+    return data.map(ts => {
+        ts.transactions = ts.transactions.filter(t => t.amount.trim() !== "")
+        return ts;
+    });
 }
 
 async function getCurrentPageAccountId(
@@ -73,7 +76,7 @@ async function getCurrentPageAccountId(
     return account!.id!;
 }
 
-window.onload = () => {
+window.addEventListener("load",function(event) {
     const button = document.createElement("button");
     button.textContent = "Firefly III"
     button.addEventListener("click", async () => {
@@ -91,9 +94,10 @@ window.onload = () => {
                 action: "store_transactions",
                 value: txs,
             },
-            () => {},
+            () => {
+            },
         );
     }, false);
     button.classList.add("btn-md", "btn-tertiary", "w-135-px", "d-flex-important", "my-auto", "print-hide")
     document.getElementsByClassName('content-main-header main-header-related')[0]?.append(button);
-};
+});

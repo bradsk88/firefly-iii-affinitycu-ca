@@ -21,7 +21,7 @@
     },
     {
       "matches": ["https://personal.affinitycu.ca/Transactions/History"],
-      "js": ["./dist/transactions.js"]
+      "js": ["./dist/transactions.js", "./dist/opening.js"]
     }
   ],
   "devtools_page": "devtools.html",
