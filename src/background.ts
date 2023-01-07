@@ -1,11 +1,7 @@
 import {createURLSearchParams, generateCodeChallenge, generateCodeVerifier} from './utils'
-import {
-    AccountsApi,
-    Configuration,
-    TransactionsApi,
-    TransactionStore
-} from "firefly-iii-typescript-sdk-fetch";
-import {AccountStore} from "firefly-iii-typescript-sdk-fetch/dist/models";
+import {AccountsApi, Configuration, TransactionsApi, TransactionStore} from "firefly-iii-typescript-sdk-fetch";
+import {AccountArray, AccountStore} from "firefly-iii-typescript-sdk-fetch/dist/models";
+import {AccountRead} from "firefly-iii-typescript-sdk-fetch/dist/models/AccountRead";
 
 const backgroundLog = (string: string): void => {
     chrome.runtime.sendMessage({
@@ -151,8 +147,34 @@ async function storeTransactions(
     })
 }
 
+
+export async function listAccounts(): Promise<AccountRead[]> {
+    return getBearerToken().then(token => doListAccounts(token));
+}
+
+async function doListAccounts(
+    token: string,
+): Promise<AccountRead[]> {
+    let api = new AccountsApi(
+        new Configuration({
+            basePath: "http://192.168.0.124:4575",
+            accessToken: `Bearer ${token}`,
+            headers: {
+                "Content-Type": "application/json",
+                "accept": "application/vnd.api+json",
+            },
+            fetchApi: self.fetch.bind(self),
+        }),
+    );
+    return api.listAccount({
+        // TODO: handle lots of accounts (multiple pages)
+    }).then(
+        (arr: AccountArray) => arr.data,
+    );
+}
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    // backgroundLog(`[message] ${JSON.stringify(message)}`)
+    backgroundLog(`[message] ${JSON.stringify(message)}`)
 
     // Remember that all of these need to do ASYNC work (including logging)
 
@@ -171,6 +193,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             backgroundLog(`[error] ${error}`)
         });
 
+    } else if (message.action === "list_accounts") {
+        listAccounts().then(accounts => sendResponse(accounts));
+        return true;
     } else {
         backgroundLog(`[UNRECOGNIZED ACTION] ${message.action}`);
         return false;

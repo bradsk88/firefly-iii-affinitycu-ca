@@ -1,7 +1,8 @@
 import React from "react";
 import {TransactionStore, TransactionTypeProperty} from "firefly-iii-typescript-sdk-fetch";
+import {AccountRead} from "firefly-iii-typescript-sdk-fetch/dist/models/AccountRead";
 
-const monthIndexes: {[key: string]: number} = {
+const monthIndexes: { [key: string]: number } = {
     'Jan': 0,
     'Feb': 1,
     'Mar': 2,
@@ -16,7 +17,9 @@ const monthIndexes: {[key: string]: number} = {
     'Dec': 11,
 }
 
-function scrapeTransactions(): TransactionStore[] {
+async function scrapeTransactions(
+    accountNo: string,
+): Promise<TransactionStore[]> {
     const table = document.querySelectorAll('div[aria-label="Transactions"] > div.table-body');
     const txs: Element = table.values().next().value;
     const txRows = txs.querySelectorAll('div.table-row');
@@ -37,9 +40,8 @@ function scrapeTransactions(): TransactionStore[] {
         const day = Number.parseInt(dayParts[1]);
 
         // FIXME: Get source ID from account name
-        const maximizer = "18";
-        const sourceId = tType === TransactionTypeProperty.Withdrawal ? maximizer : undefined;
-        const destId = tType === TransactionTypeProperty.Deposit ? maximizer : undefined;
+        const sourceId = tType === TransactionTypeProperty.Withdrawal ? accountNo : undefined;
+        const destId = tType === TransactionTypeProperty.Deposit ? accountNo : undefined;
 
         const tx: TransactionStore = {
             errorIfDuplicateHash: true,
@@ -58,11 +60,32 @@ function scrapeTransactions(): TransactionStore[] {
     return data;
 }
 
+async function getCurrentPageAccountId(
+    allAccounts: AccountRead[],
+): Promise<string> {
+    const headerDiv = document.getElementsByClassName('content-main-header')[0];
+    const div = headerDiv.getElementsByClassName("d-flex-tb")[0];
+    const header = div.getElementsByTagName("h1")[0];
+    const [_, ...accountNameParts] = header.textContent!.split(' - ');
+    const accountName = accountNameParts.join(' - ');
+    const account = allAccounts.find(acct => acct.attributes.name === accountName);
+    console.log('account', account);
+    return account!.id!;
+}
+
 window.onload = () => {
     const button = document.createElement("button");
     button.textContent = "Firefly III"
-    button.addEventListener("click", () => {
-        const txs = scrapeTransactions();
+    button.addEventListener("click", async () => {
+        console.log('clicked');
+        const accounts = await chrome.runtime.sendMessage({
+            action: "list_accounts",
+        });
+        console.log('accounts', accounts);
+        const id = await getCurrentPageAccountId(accounts);
+        console.log('id', id);
+        const txs = await scrapeTransactions(id);
+        console.log('tx', txs);
         chrome.runtime.sendMessage(
             {
                 action: "store_transactions",
