@@ -7,6 +7,7 @@ module.exports = {
         background: path.join(srcDir, 'background.ts'),
         initialize: path.join(srcDir, 'initialize.tsx'),
         accounts: path.join(srcDir, 'accounts.tsx'),
+        transactions: path.join(srcDir, 'transactions.tsx'),
     },
     output: {
         path: path.join(__dirname, "../dist"),

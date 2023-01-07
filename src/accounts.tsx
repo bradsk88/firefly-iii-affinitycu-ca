@@ -36,7 +36,7 @@ window.onload = () => {
         const accts = scrapeAccounts();
         chrome.runtime.sendMessage(
             {
-                action: "store_transactions",
+                action: "store_accounts",
                 value: accts,
             },
             () => {

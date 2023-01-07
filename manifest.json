@@ -18,6 +18,10 @@
     {
       "matches": ["https://personal.affinitycu.ca/Accounts/Summary"],
       "js": ["./dist/accounts.js"]
+    },
+    {
+      "matches": ["https://personal.affinitycu.ca/Transactions/History"],
+      "js": ["./dist/transactions.js"]
     }
   ],
   "devtools_page": "devtools.html",
