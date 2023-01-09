@@ -2,7 +2,6 @@ import {createURLSearchParams, generateCodeChallenge, generateCodeVerifier} from
 import {AccountsApi, Configuration, TransactionsApi, TransactionStore} from "firefly-iii-typescript-sdk-fetch";
 import {AccountArray, AccountStore} from "firefly-iii-typescript-sdk-fetch/dist/models";
 import {AccountRead} from "firefly-iii-typescript-sdk-fetch/dist/models/AccountRead";
-import {OpeningBalance} from "./opening";
 
 const backgroundLog = (string: string): void => {
     chrome.runtime.sendMessage({
@@ -148,6 +147,13 @@ async function storeTransactions(
     })
 }
 
+export interface OpeningBalance {
+    accountNumber: string;
+    accountName: string;
+    balance: number;
+    date: Date;
+}
+
 async function storeOpeningBalance(
     data: OpeningBalance,
 ) {
@@ -211,11 +217,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             backgroundLog(`[error] ${error}`)
         })
     } else if (message.action === "store_accounts") {
-        storeAccounts(message.value).catch((error) => {
+        patchDatesAccount(message.value).then(
+            accs => storeAccounts(accs),
+        ).catch((error) => {
             backgroundLog(`[error] ${error}`)
         });
     } else if (message.action === "store_transactions") {
-        patchDates(message.value).then(
+        patchDatesAndAvoidDupes(message.value).then(
             txStore => storeTransactions(txStore),
         ).catch((error) => {
             backgroundLog(`[error] ${error}`)
@@ -238,8 +246,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true
 });
 
-async function patchDates(data: TransactionStore[]): Promise<TransactionStore[]> {
+async function patchDatesAndAvoidDupes(data: TransactionStore[]): Promise<TransactionStore[]> {
     return data.map(ts => {
+        ts.errorIfDuplicateHash = ts.errorIfDuplicateHash === undefined ? true : ts.errorIfDuplicateHash;
         ts.transactions = ts.transactions.map(v => {
             v.date = new Date(v.date); // Dates are converted to strings for message
             return v;
@@ -251,4 +260,14 @@ async function patchDates(data: TransactionStore[]): Promise<TransactionStore[]>
 async function patchDatesOB(data: OpeningBalance): Promise<OpeningBalance> {
     data.date = new Date(data.date);
     return data;
+}
+
+async function patchDatesAccount(data: AccountStore[]): Promise<AccountStore[]> {
+    return data.map(acc => {
+        const d = acc.monthlyPaymentDate;
+        acc.monthlyPaymentDate = d ? new Date(d) : d;
+        const od = acc.openingBalanceDate;
+        acc.openingBalanceDate = od? new Date(od) : od;
+        return acc;
+    });
 }
