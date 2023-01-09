@@ -1,6 +1,7 @@
 import React from "react";
 import {TransactionStore, TransactionTypeProperty} from "firefly-iii-typescript-sdk-fetch";
 import {AccountRead} from "firefly-iii-typescript-sdk-fetch/dist/models/AccountRead";
+import {AutoRunState} from "./common/auto";
 
 const monthIndexes: { [key: string]: number } = {
     'Jan': 0,
@@ -79,7 +80,8 @@ async function getCurrentPageAccountId(
 window.addEventListener("load",function(event) {
     const button = document.createElement("button");
     button.textContent = "Firefly III"
-    button.addEventListener("click", async () => {
+
+    const doScrape = async () => {
         console.log('clicked');
         const accounts = await chrome.runtime.sendMessage({
             action: "list_accounts",
@@ -97,6 +99,33 @@ window.addEventListener("load",function(event) {
             () => {
             },
         );
+    }
+
+    chrome.runtime.sendMessage({
+        action: "get_auto_run_state",
+    }).then(state => {
+        if (state === AutoRunState.Transactions) {
+            // TODO: Simulate a click on an account
+            doScrape().then(() => {
+                // TODO: This isn't really right.  The row checking code will go in accounts.
+                if (onLastRow) {
+                    chrome.runtime.sendMessage({
+                        action: "complete_auto_run_state",
+                        state: AutoRunState.Transactions,
+                    })
+                } else {
+                    chrome.runtime.sendMessage({
+                        action: "increment_auto_run_tx_account",
+                        lastIndexCompleted: 0,
+                    })
+                }
+                window.close();
+            });
+        }
+    });
+
+    button.addEventListener("click", async () => {
+       doScrape();
     }, false);
     button.classList.add("btn-md", "btn-tertiary", "w-135-px", "d-flex-important", "my-auto", "print-hide")
     document.getElementsByClassName('content-main-header main-header-related')[0]?.append(button);

@@ -5,6 +5,7 @@ import {
     ShortAccountTypeProperty
 } from "firefly-iii-typescript-sdk-fetch/dist/models";
 import {sha512} from "js-sha512";
+import {AutoRunState} from "./common/auto";
 
 function scrapeAccounts(): AccountStore[] {
     const forms = document.querySelectorAll('form[action="/Transactions/History"]');
@@ -32,7 +33,7 @@ function scrapeAccounts(): AccountStore[] {
 window.addEventListener("load",function(event) {
     const button = document.createElement("button");
     button.textContent = "Export to Firefly III"
-    button.addEventListener("click", () => {
+    const doScrape = () => {
         const accts = scrapeAccounts();
         chrome.runtime.sendMessage(
             {
@@ -42,7 +43,22 @@ window.addEventListener("load",function(event) {
             () => {
             }
         );
-    }, false);
+    }
+
+    chrome.runtime.sendMessage({
+        action: "get_auto_run_state",
+    }).then(state => {
+        if (state === AutoRunState.Accounts) {
+            doScrape();
+            chrome.runtime.sendMessage({
+                action: "complete_auto_run_state",
+                state: AutoRunState.Accounts,
+            })
+            window.close();
+        }
+    });
+
+    button.addEventListener("click", () => doScrape(), false);
     button.classList.add("btn-md", "btn-tertiary", "w-135-px", "d-flex-important", "my-auto", "print-hide")
     document.getElementsByClassName('content-main-header main-header-related')[0]?.append(button);
 });

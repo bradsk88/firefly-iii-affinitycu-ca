@@ -2,6 +2,53 @@ import {createURLSearchParams, generateCodeChallenge, generateCodeVerifier} from
 import {AccountsApi, Configuration, TransactionsApi, TransactionStore} from "firefly-iii-typescript-sdk-fetch";
 import {AccountArray, AccountStore} from "firefly-iii-typescript-sdk-fetch/dist/models";
 import {AccountRead} from "firefly-iii-typescript-sdk-fetch/dist/models/AccountRead";
+import {extensionId, hubExtensionId} from "./extensionid";
+import {AutoRunState} from "./common/auto";
+
+function registerSelfWithHubExtension() {
+    console.log('registering self');
+    const port = chrome.runtime.connect(hubExtensionId);
+    port.postMessage({
+        action: "register",
+        extension: extensionId,
+    })
+}
+
+chrome.runtime.onConnectExternal.addListener(function (port) {
+    port.onMessage.addListener(function (msg) {
+        console.log('message', msg);
+        if (msg.action === "request_auto_run") {
+            progressAutoRun();
+        }
+    });
+});
+
+function progressAutoRun(state = AutoRunState.Accounts) {
+    setAutoRunState(state);
+    chrome.tabs.create({
+        url: 'https://personal.affinitycu.ca/Accounts/Summary'
+    });
+}
+
+function setAutoRunState(s: AutoRunState) {
+    chrome.storage.local.set({
+        "ffiii": {
+            "auto_run_state": s,
+        }
+    })
+}
+
+export function getAutoRunState(): Promise<AutoRunState> {
+    return chrome.storage.local.get(["ffiii"]).then(r => {
+        return r.ffiii?.auto_run_state || AutoRunState.Unstarted;
+    });
+}
+
+
+chrome.runtime.onStartup.addListener(function() {
+    setTimeout(registerSelfWithHubExtension, 1000);
+})
+setTimeout(registerSelfWithHubExtension, 1000);
 
 const backgroundLog = (string: string): void => {
     chrome.runtime.sendMessage({
@@ -238,6 +285,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     } else if (message.action === "list_accounts") {
         listAccounts().then(accounts => sendResponse(accounts));
+        return true;
+    } else if (message.action === "get_auto_run_state") {
+        getAutoRunState().then(state => sendResponse(state));
+        return true;
+    }  else if (message.action === "complete_auto_run_state") {
+        if (message.state === AutoRunState.Accounts) {
+            progressAutoRun(AutoRunState.Transactions);
+        } else if (message.state === AutoRunState.Transactions) {
+            progressAutoRun(AutoRunState.Done);
+        }
         return true;
     } else {
         backgroundLog(`[UNRECOGNIZED ACTION] ${message.action}`);

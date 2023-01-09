@@ -9,6 +9,7 @@ module.exports = {
         accounts: path.join(srcDir, 'accounts.tsx'),
         transactions: path.join(srcDir, 'transactions.tsx'),
         opening: path.join(srcDir, 'opening.tsx'),
+        auto: path.join(srcDir, 'content_scripts', 'auto.ts'),
     },
     output: {
         path: path.join(__dirname, "../dist"),
