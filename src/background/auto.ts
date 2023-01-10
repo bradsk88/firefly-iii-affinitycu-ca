@@ -1,11 +1,19 @@
 import {AutoRunState} from "../common/auto";
+import Tab = chrome.tabs.Tab;
 
-export function progressAutoRun(state = AutoRunState.Accounts) {
-    setAutoRunState(state)
-        .then(() => console.log('State stored. Opening tab'))
-    .then(() => chrome.tabs.create({
+let openedWindow: Tab;
+
+export async function progressAutoRun(state = AutoRunState.Accounts) {
+    await setAutoRunState(state)
+    if (openedWindow) {
+        chrome.tabs.remove(openedWindow.id!)
+    }
+    if (state === AutoRunState.Done) {
+        return;
+    }
+    openedWindow = await chrome.tabs.create({
         url: 'https://personal.affinitycu.ca/Accounts/Summary'
-    }));
+    })
 }
 
 async function setAutoRunState(s: AutoRunState): Promise<void> {
@@ -28,9 +36,11 @@ export function getAutoRunState(): Promise<AutoRunState> {
 
 export function progressAutoTx(lastAccountName: string) {
     setAutoRunLastTx(lastAccountName)
-    .then(() => chrome.tabs.create({
-        url: 'https://personal.affinitycu.ca/Accounts/Summary'
-    }));
+        .then(() => openedWindow ? chrome.tabs.remove(openedWindow.id!) : undefined)
+        .then(() => chrome.tabs.create({
+            url: 'https://personal.affinitycu.ca/Accounts/Summary'
+        }))
+        .then(tab => openedWindow = tab);
 }
 
 async function setAutoRunLastTx(accountName: string): Promise<void> {

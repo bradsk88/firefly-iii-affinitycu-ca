@@ -77,7 +77,7 @@ function openAccountForAutoRun() {
                 chrome.runtime.sendMessage({
                     action: "complete_auto_run_state",
                     state: AutoRunState.Transactions,
-                }).then(() => window.close());
+                });
             } else {
                 button?.click()
             }
@@ -111,7 +111,7 @@ addButtonOnURLMatch(
                 doScrape().then(() => chrome.runtime.sendMessage({
                     action: "complete_auto_run_state",
                     state: AutoRunState.Accounts,
-                })).then(() => window.close());
+                }));
             } else if (state === AutoRunState.Transactions) {
                 openAccountForAutoRun();
             }
