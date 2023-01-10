@@ -2,6 +2,8 @@ import React from "react";
 import {TransactionStore, TransactionTypeProperty} from "firefly-iii-typescript-sdk-fetch";
 import {AccountRead} from "firefly-iii-typescript-sdk-fetch/dist/models/AccountRead";
 import {AutoRunState} from "./common/auto";
+import {PageAccount} from "./common/accounts";
+import {addButtonOnURLMatch} from "./common/buttons";
 
 const monthIndexes: { [key: string]: number } = {
     'Jan': 0,
@@ -19,10 +21,13 @@ const monthIndexes: { [key: string]: number } = {
 }
 
 async function scrapeTransactions(
-    accountNo: string,
+    accountId: string,
 ): Promise<TransactionStore[]> {
     const table = document.querySelectorAll('div[aria-label="Transactions"] > div.table-body');
-    const txs: Element = table.values().next().value;
+    const txs: Element = table.values().next()?.value;
+    if (!txs) {
+        return new Promise((r) => r([]));
+    }
     const txRows = txs.querySelectorAll('div.table-row');
     const data = Array.from(txRows.values()).map((row, index) => {
         const date = row.children.item(0)!.textContent!.trim();
@@ -41,8 +46,8 @@ async function scrapeTransactions(
         const day = Number.parseInt(dayParts[1]);
 
         // FIXME: Get source ID from account name
-        const sourceId = tType === TransactionTypeProperty.Withdrawal ? accountNo : undefined;
-        const destId = tType === TransactionTypeProperty.Deposit ? accountNo : undefined;
+        const sourceId = tType === TransactionTypeProperty.Withdrawal ? accountId : undefined;
+        const destId = tType === TransactionTypeProperty.Deposit ? accountId : undefined;
 
         const tx: TransactionStore = {
             errorIfDuplicateHash: true,
@@ -64,69 +69,67 @@ async function scrapeTransactions(
     });
 }
 
-async function getCurrentPageAccountId(
+async function getCurrentPageAccount(
     allAccounts: AccountRead[],
-): Promise<string> {
+): Promise<PageAccount> {
     const headerDiv = document.getElementsByClassName('content-main-header')[0];
     const div = headerDiv.getElementsByClassName("d-flex-tb")[0];
     const header = div.getElementsByTagName("h1")[0];
     const [_, ...accountNameParts] = header.textContent!.split(' - ');
     const accountName = accountNameParts.join(' - ');
     const account = allAccounts.find(acct => acct.attributes.name === accountName);
-    console.log('account', account);
-    return account!.id!;
+    return {
+        id: account!.id!,
+        name: account!.attributes.name,
+        accountNumber: account!.attributes.accountNumber || undefined,
+    };
 }
 
-window.addEventListener("load",function(event) {
-    const button = document.createElement("button");
-    button.textContent = "Firefly III"
 
-    const doScrape = async () => {
-        console.log('clicked');
-        const accounts = await chrome.runtime.sendMessage({
-            action: "list_accounts",
-        });
-        console.log('accounts', accounts);
-        const id = await getCurrentPageAccountId(accounts);
-        console.log('id', id);
-        const txs = await scrapeTransactions(id);
-        console.log('tx', txs);
-        chrome.runtime.sendMessage(
-            {
+addButtonOnURLMatch(
+    'Transactions/History',
+    () => false,
+    () => {
+        const button = document.createElement("button");
+        button.textContent = "Firefly III"
+
+        const doScrape = async () => {
+            console.log('clicked');
+            const accounts = await chrome.runtime.sendMessage({
+                action: "list_accounts",
+            });
+            console.log('accounts', accounts);
+            const id = await getCurrentPageAccount(accounts);
+            console.log('id', id);
+            const txs = await scrapeTransactions(id.id);
+            console.log('tx', txs);
+            chrome.runtime.sendMessage({
                 action: "store_transactions",
                 value: txs,
-            },
-            () => {
-            },
-        );
-    }
-
-    chrome.runtime.sendMessage({
-        action: "get_auto_run_state",
-    }).then(state => {
-        if (state === AutoRunState.Transactions) {
-            // TODO: Simulate a click on an account
-            doScrape().then(() => {
-                // TODO: This isn't really right.  The row checking code will go in accounts.
-                if (onLastRow) {
-                    chrome.runtime.sendMessage({
-                        action: "complete_auto_run_state",
-                        state: AutoRunState.Transactions,
-                    })
-                } else {
-                    chrome.runtime.sendMessage({
-                        action: "increment_auto_run_tx_account",
-                        lastIndexCompleted: 0,
-                    })
-                }
-                window.close();
-            });
+            }, () => {})
+            return id;
         }
-    });
 
-    button.addEventListener("click", async () => {
-       doScrape();
-    }, false);
-    button.classList.add("btn-md", "btn-tertiary", "w-135-px", "d-flex-important", "my-auto", "print-hide")
-    document.getElementsByClassName('content-main-header main-header-related')[0]?.append(button);
-});
+        chrome.runtime.sendMessage({
+            action: "get_auto_run_state",
+        }).then(state => {
+            if (state === AutoRunState.Transactions) {
+                doScrape()
+                    .then((id: PageAccount) => {
+                        console.log('finished scraping', id);
+                        return id;
+                    })
+                    .then((id: PageAccount) => chrome.runtime.sendMessage({
+                        action: "increment_auto_run_tx_account",
+                        lastAccountNameCompleted: id.name,
+                    }, () => {}))
+                    .then(() => window.close());
+            }
+        });
+
+        button.addEventListener("click", async () => {
+            doScrape();
+        }, false);
+        button.classList.add("btn-md", "btn-tertiary", "w-135-px", "d-flex-important", "my-auto", "print-hide")
+        document.getElementsByClassName('content-main-header main-header-related')[0]?.append(button);
+    });

@@ -21,7 +21,7 @@
       "js": ["./dist/auto.js"]
     },
     {
-      "matches": ["https://personal.affinitycu.ca/Accounts/Summary"],
+      "matches": ["https://personal.affinitycu.ca/Accounts/Summary*"],
       "js": ["./dist/accounts.js"]
     },
     {

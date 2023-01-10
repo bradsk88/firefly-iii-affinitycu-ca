@@ -9,6 +9,7 @@ function buildCol() {
 }
 
 window.addEventListener("load", function (event) {
+    // TODO: Don't show this component if auto run is off
     const container = document.createElement("div");
     container.style.position = "absolute";
     container.style.top = "0";
@@ -29,23 +30,34 @@ window.addEventListener("load", function (event) {
     container.append(table);
     document.body.append(container);
 
-    chrome.runtime.sendMessage({
-        action: "get_auto_run_state",
-    }).then(
-        state => {
-            acctCol.style.background = "white";
-            txCol.style.background = "white";
-            doneCol.style.background = "white";
-            if (state === AutoRunState.Accounts) {
-                acctCol.style.background = "blue";
-            } else if (state === AutoRunState.Transactions) {
-                acctCol.style.background = "blue";
-                txCol.style.background = "blue";
-            } else if (state === AutoRunState.Done) {
-                acctCol.style.background = "blue";
-                txCol.style.background = "blue";
-                doneCol.style.background = "blue";
+    const updateProgressBar = () => {
+        chrome.runtime.sendMessage({
+            action: "get_auto_run_state",
+        }).then(
+            state => {
+                acctCol.style.background = "white";
+                txCol.style.background = "white";
+                doneCol.style.background = "white";
+                if (state === AutoRunState.Accounts) {
+                    acctCol.style.background = "blue";
+                } else if (state === AutoRunState.Transactions) {
+                    acctCol.style.background = "blue";
+                    txCol.style.background = "blue";
+                } else if (state === AutoRunState.Done) {
+                    acctCol.style.background = "blue";
+                    txCol.style.background = "blue";
+                    doneCol.style.background = "blue";
+                }
             }
+        )
+    }
+    updateProgressBar();
+
+    chrome.runtime.onMessage.addListener((message) => {
+        if (message.action !== "update_auto_run_progress") {
+            return false;
         }
-    )
+        updateProgressBar();
+        return true;
+    })
 });
