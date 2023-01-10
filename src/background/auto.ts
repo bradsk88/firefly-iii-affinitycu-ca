@@ -1,4 +1,4 @@
-import {AutoRunState} from "../common/auto";
+import {AutoRunState} from "./auto_state";
 import Tab = chrome.tabs.Tab;
 
 let openedWindow: Tab;

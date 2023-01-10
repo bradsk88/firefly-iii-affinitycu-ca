@@ -1,7 +1,7 @@
 import React from "react";
 import {TransactionStore, TransactionTypeProperty} from "firefly-iii-typescript-sdk-fetch";
 import {AccountRead} from "firefly-iii-typescript-sdk-fetch/dist/models/AccountRead";
-import {AutoRunState} from "./common/auto";
+import {AutoRunState} from "./background/auto_state";
 import {PageAccount} from "./common/accounts";
 import {addButtonOnURLMatch} from "./common/buttons";
 

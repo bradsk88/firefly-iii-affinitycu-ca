@@ -2,7 +2,7 @@ import {TransactionStore} from "firefly-iii-typescript-sdk-fetch";
 import {AccountStore} from "firefly-iii-typescript-sdk-fetch/dist/models";
 import {AccountRead} from "firefly-iii-typescript-sdk-fetch/dist/models/AccountRead";
 import {extensionId, hubExtensionId} from "./extensionid";
-import {AutoRunState} from "./common/auto";
+import {AutoRunState} from "./background/auto_state";
 import {doOauth, getBearerToken} from "./background/oauth";
 import {
     doListAccounts,

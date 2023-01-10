@@ -1,6 +1,11 @@
-import {AutoRunState} from "../common/auto";
+import {AutoRunState} from "../background/auto_state";
+
+// TODO: You will need to update manifest.json so this file will be loaded on
+//  the correct URL(s)
 
 function buildCol() {
+    // TODO: These are just some default styles for the status bar.
+    //  It should be fine to style these however you please.
     const col = document.createElement("td");
     col.style.width = "40px";
     col.style.background = "white";
@@ -8,8 +13,9 @@ function buildCol() {
     return col;
 }
 
-window.addEventListener("load", function (event) {
-    // TODO: Don't show this component if auto run is off
+function buildStatusBar(acctCol: HTMLTableCellElement, txCol: HTMLTableCellElement, doneCol: HTMLTableCellElement) {
+    // TODO: These are just some default styles for the status bar.
+    //  It should be fine to style these however you please.
     const container = document.createElement("div");
     container.style.position = "absolute";
     container.style.top = "0";
@@ -21,20 +27,26 @@ window.addEventListener("load", function (event) {
     table.style.margin = "0 auto";
     table.style.height = "100%";
 
-    const acctCol = buildCol();
-    const txCol = buildCol();
-    const doneCol = buildCol();
-
     table.append(acctCol, txCol, doneCol)
 
     container.append(table);
-    document.body.append(container);
+    return container;
+}
+
+window.addEventListener("load", function (event) {
+    const [acctCol, txCol, doneCol] = [buildCol(), buildCol(), buildCol()];
+    const statusBar = buildStatusBar(acctCol, txCol, doneCol);
+
+    document.body.append(statusBar);
 
     const updateProgressBar = () => {
         chrome.runtime.sendMessage({
             action: "get_auto_run_state",
         }).then(
             state => {
+                if (state === AutoRunState.Unstarted) {
+                    return;
+                }
                 acctCol.style.background = "white";
                 txCol.style.background = "white";
                 doneCol.style.background = "white";

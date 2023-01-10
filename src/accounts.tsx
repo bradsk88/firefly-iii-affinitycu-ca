@@ -5,7 +5,7 @@ import {
     ShortAccountTypeProperty
 } from "firefly-iii-typescript-sdk-fetch/dist/models";
 import {sha512} from "js-sha512";
-import {AutoRunState} from "./common/auto";
+import {AutoRunState} from "./background/auto_state";
 import {addButtonOnURLMatch} from "./common/buttons";
 
 function getAccountButtons(): HTMLButtonElement[] {
