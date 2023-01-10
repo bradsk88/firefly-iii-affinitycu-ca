@@ -1,7 +1,6 @@
 import {TransactionStore} from "firefly-iii-typescript-sdk-fetch";
 import {AccountStore} from "firefly-iii-typescript-sdk-fetch/dist/models";
 import {AccountRead} from "firefly-iii-typescript-sdk-fetch/dist/models/AccountRead";
-import {extensionId, hubExtensionId} from "./extensionid";
 import {AutoRunState} from "./background/auto_state";
 import {doOauth, getBearerToken} from "./background/oauth";
 import {
@@ -12,6 +11,15 @@ import {
     OpeningBalance
 } from "./background/firefly_export";
 import {getAutoRunLastTransaction, getAutoRunState, progressAutoRun, progressAutoTx} from "./background/auto";
+import {extensionId, hubExtensionId} from "./extensionid";
+
+const backgroundLog = (string: string): void => {
+    chrome.runtime.sendMessage({
+        action: "log",
+        value: string,
+    }, () => {
+    });
+}
 
 function registerSelfWithHubExtension() {
     console.log('registering self');
@@ -22,6 +30,12 @@ function registerSelfWithHubExtension() {
     })
 }
 
+chrome.runtime.onStartup.addListener(function() {
+    setTimeout(registerSelfWithHubExtension, 1000);
+})
+
+setTimeout(registerSelfWithHubExtension, 1000);
+
 chrome.runtime.onConnectExternal.addListener(function (port) {
     port.onMessage.addListener(function (msg) {
         console.log('message', msg);
@@ -30,19 +44,6 @@ chrome.runtime.onConnectExternal.addListener(function (port) {
         }
     });
 });
-
-chrome.runtime.onStartup.addListener(function() {
-    setTimeout(registerSelfWithHubExtension, 1000);
-})
-setTimeout(registerSelfWithHubExtension, 1000);
-
-const backgroundLog = (string: string): void => {
-    chrome.runtime.sendMessage({
-        action: "log",
-        value: string,
-    }, () => {
-    });
-}
 
 async function storeAccounts(data: AccountStore[]) {
     getBearerToken().then(token => doStoreAccounts(token, data))
