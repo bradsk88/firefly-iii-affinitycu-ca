@@ -66,3 +66,11 @@ export function scrapeTransactionsFromPage(
         return ts;
     });
 }
+
+export function findBackToAccountsPageButton(): HTMLElement {
+    // TODO: Put this in the base project
+    // TODO: Once a single account's transactions have been scraped, we need to
+    //  go back to the main accounts page to finish the auto run. Find an
+    //  element on the page that we can click on to go back.
+    return document.querySelector('button.btn-icon-back')!;
+}

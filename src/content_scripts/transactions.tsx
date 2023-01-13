@@ -3,19 +3,28 @@ import {runOnURLMatch} from "../common/buttons";
 import {AutoRunState} from "../background/auto_state";
 import {getCurrentPageAccount, scrapeTransactionsFromPage} from "./scrape/transactions";
 import {PageAccount} from "../common/accounts";
+import {runOnContentChange} from "../common/autorun";
+import {backToAccountsPage} from "./auto_run/transactions";
 
 interface TransactionScrape {
     pageAccount: PageAccount;
     pageTransactions: TransactionStore[];
 }
 
+let pageAlreadyScraped = false;
+
 async function doScrape(): Promise<TransactionScrape> {
+    if (pageAlreadyScraped) {
+        throw new Error("Already scraped. Stopping.");
+    }
+
     const accounts = await chrome.runtime.sendMessage({
         action: "list_accounts",
     });
     const id = await getCurrentPageAccount(accounts);
     const txs = scrapeTransactionsFromPage(id.id);
-    chrome.runtime.sendMessage({
+    pageAlreadyScraped = true;
+    await chrome.runtime.sendMessage({
             action: "store_transactions",
             value: txs,
         },
@@ -47,7 +56,8 @@ function enableAutoRun() {
                     action: "increment_auto_run_tx_account",
                     lastAccountNameCompleted: id.pageAccount.name,
                 }, () => {
-                }));
+                }))
+                .then(() => backToAccountsPage());
         }
     });
 }
@@ -58,7 +68,12 @@ runOnURLMatch(
     'Transactions/History',
     () => !!document.getElementById(buttonId),
     () => {
+        pageAlreadyScraped = false;
         addButton();
-        enableAutoRun();
     },
+)
+
+runOnContentChange(
+    'Transactions/History',
+    enableAutoRun,
 )

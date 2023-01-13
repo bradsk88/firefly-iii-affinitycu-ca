@@ -2,7 +2,7 @@ import {sha512} from "js-sha512";
 import {AutoRunState} from "../../background/auto_state";
 import {getAccountElements, getAccountName} from "../scrape/accounts";
 
-function findNextAccountElement(accountName: string): HTMLElement | undefined {
+function findNextAccountElement(accountName: string): Element | undefined {
     // You probably shouldn't need to modify the function.
     // It scans the account "elements" on the page and returns the one that is
     // AFTER the last account whose transactions were scraped.
@@ -21,9 +21,9 @@ function findNextAccountElement(accountName: string): HTMLElement | undefined {
 }
 
 function navigateToAccount(
-    accountElement: HTMLElement,
+    accountElement: Element,
 ): void {
-    accountElement?.click()
+    (accountElement as HTMLButtonElement)?.click()
 }
 
 export function openAccountForAutoRun() {
