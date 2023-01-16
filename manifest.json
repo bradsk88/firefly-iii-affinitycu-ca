@@ -3,14 +3,12 @@
   "version": "1.0",
   "description": "Scrapes account and transaction data from Affinity Credit Union (Canada) into Firefly III",
   "permissions": [
-    "identity",
-    "clipboardWrite",
     "storage",
     "tabs"
   ],
-  "options_page": "options.html",
-  "host_permissions": [
-    "<all_urls>"
+  "optional_host_permissions": [
+    "http://*/*",
+    "https://*/*"
   ],
   "background": {
     "service_worker": "./dist/background.js"
@@ -29,9 +27,11 @@
       "js": ["./dist/transactions.js", "./dist/opening.js"]
     }
   ],
-  "devtools_page": "devtools.html",
-  "manifest_version": 3,
+  "action": {
+    "default_popup": "options.html"
+  },
   "icons": {
     "128": "icon.png"
-  }
+  },
+  "manifest_version": 3
 }
