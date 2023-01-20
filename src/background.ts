@@ -45,9 +45,11 @@ function registerSelfWithHubExtension() {
 
 chrome.runtime.onStartup.addListener(function() {
     setTimeout(registerSelfWithHubExtension, 1000);
+    setTimeout(registerSelfWithHubExtension, 5000);
 })
 
 setTimeout(registerSelfWithHubExtension, 1000);
+setTimeout(registerSelfWithHubExtension, 5000);
 
 chrome.runtime.onConnectExternal.addListener(function (port) {
     port.onMessage.addListener(function (msg) {
@@ -85,7 +87,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         })
     } else if (message.action === "store_accounts") {
         getAutoRunState().then(state => {
-            if (state === AutoRunState.Done) {
+            if (message.is_auto_run && state === AutoRunState.Done) {
                 return;
             }
             patchDatesAccount(message.value).then(
@@ -96,7 +98,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         });
     } else if (message.action === "store_transactions") {
         getAutoRunState().then(state => {
-            if (state === AutoRunState.Done) {
+            if (message.is_auto_run && state === AutoRunState.Done) {
                 return;
             }
             patchDatesAndAvoidDupes(message.value).then(
