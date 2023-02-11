@@ -5,6 +5,8 @@ import {getCurrentPageAccount, scrapeTransactionsFromPage} from "./scrape/transa
 import {PageAccount} from "../common/accounts";
 import {runOnContentChange} from "../common/autorun";
 import {backToAccountsPage} from "./auto_run/transactions";
+import {isSingleAccountBank} from "../extensionid";
+import {getButtonDestination} from "./scrape/accounts";
 
 interface TransactionScrape {
     pageAccount: PageAccount;
@@ -53,7 +55,7 @@ function addButton() {
     const button = document.createElement("button");
     button.id = buttonId;
     button.textContent = "Firefly III"
-    button.addEventListener("click", async () => doScrape(), false);
+    button.addEventListener("click", async () => doScrape(false), false);
     button.classList.add("btn-md", "btn-tertiary", "w-135-px", "d-flex-important", "my-auto", "print-hide")
     getButtonDestination().append(button);
 }
@@ -81,17 +83,19 @@ function enableAutoRun() {
     });
 }
 
-const txPage = 'accounts/main/details';
+const txPage = 'Transactions/History';
 
 // If your manifest.json allows your content script to run on multiple pages,
 // you can call this function more than once, or set the urlPath to "".
 runOnURLMatch(
     txPage,
-    () => !!document.getElementById(buttonId),
-    () => {
-        pageAlreadyScraped = false;
-        addButton();
-    },
+    () =>
+        () => {
+            if (!document.getElementById(buttonId)) {
+                pageAlreadyScraped = false;
+                addButton();
+            }
+        },
 )
 
 runOnContentChange(

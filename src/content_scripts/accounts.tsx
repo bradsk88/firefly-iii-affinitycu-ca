@@ -92,10 +92,11 @@ const accountsUrl = 'Accounts/Summary';
 
 runOnURLMatch(
     accountsUrl,
-    () => !!document.getElementById(buttonId),
     () => {
-        pageAlreadyScraped = false;
-        addButton();
+        if (!document.getElementById(buttonId)) {
+            pageAlreadyScraped = false;
+            addButton();
+        }
     },
 );
 

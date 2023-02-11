@@ -1,5 +1,4 @@
 import {TransactionStore, TransactionTypeProperty} from "firefly-iii-typescript-sdk-fetch";
-import {PageAccount} from "../../common/accounts";
 import {AccountRead} from "firefly-iii-typescript-sdk-fetch/dist/models/AccountRead";
 import {parseDate} from "../../common/dates";
 
@@ -8,25 +7,20 @@ import {parseDate} from "../../common/dates";
  */
 export async function getCurrentPageAccount(
     allAccounts: AccountRead[],
-): Promise<PageAccount> {
+): Promise<AccountRead> {
     const headerDiv = document.getElementsByClassName('content-main-header')[0];
     const div = headerDiv.getElementsByClassName("d-flex-tb")[0];
     const header = div.getElementsByTagName("h1")[0];
     const [_, ...accountNameParts] = header.textContent!.split(' - ');
     const accountName = accountNameParts.join(' - ');
-    const account = allAccounts.find(acct => acct.attributes.name === accountName);
-    return {
-        id: account!.id!,
-        name: account!.attributes.name,
-        accountNumber: account!.attributes.accountNumber || undefined,
-    };
+    return allAccounts.find(acct => acct.attributes.name === accountName)!;
 }
 
 /**
- * @param pageAccountId The Firefly III account ID for the current page
+ * @param pageAccount The Firefly III account for the current page
  */
 export function scrapeTransactionsFromPage(
-    pageAccountId: string,
+    pageAccount: AccountRead,
 ): TransactionStore[] {
     const table = document.querySelectorAll('div[aria-label="Transactions"] > div.table-body');
     const txs: Element = table.values().next()?.value;
@@ -44,8 +38,8 @@ export function scrapeTransactionsFromPage(
         const absAmt = amount.replace('$', '').replace('-', '').replace(',', '');
 
         // FIXME: Get source ID from account name
-        const sourceId = tType === TransactionTypeProperty.Withdrawal ? pageAccountId : undefined;
-        const destId = tType === TransactionTypeProperty.Deposit ? pageAccountId : undefined;
+        const sourceId = tType === TransactionTypeProperty.Withdrawal ? pageAccount.id : undefined;
+        const destId = tType === TransactionTypeProperty.Deposit ? pageAccount.id : undefined;
 
         const tx: TransactionStore = {
             errorIfDuplicateHash: true,
