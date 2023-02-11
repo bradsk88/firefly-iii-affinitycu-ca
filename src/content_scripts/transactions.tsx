@@ -13,25 +13,36 @@ interface TransactionScrape {
 
 let pageAlreadyScraped = false;
 
-async function doScrape(): Promise<TransactionScrape> {
-    if (pageAlreadyScraped) {
+async function doScrape(isAutoRun: boolean): Promise<TransactionScrape> {
+    if (isAutoRun && pageAlreadyScraped) {
         throw new Error("Already scraped. Stopping.");
     }
 
     const accounts = await chrome.runtime.sendMessage({
         action: "list_accounts",
     });
-    const id = await getCurrentPageAccount(accounts);
-    const txs = scrapeTransactionsFromPage(id.id);
+    const acct = await getCurrentPageAccount(accounts);
+    const txs = scrapeTransactionsFromPage(acct);
     pageAlreadyScraped = true;
     await chrome.runtime.sendMessage({
             action: "store_transactions",
+            is_auto_run: isAutoRun,
             value: txs,
         },
         () => {
         });
+    if (isSingleAccountBank) {
+        await chrome.runtime.sendMessage({
+            action: "complete_auto_run_state",
+            state: AutoRunState.Transactions,
+        });
+    }
     return {
-        pageAccount: id,
+        pageAccount: {
+            accountNumber: acct.attributes.accountNumber!,
+            name: acct.attributes.name,
+            id: acct.id,
+        },
         pageTransactions: txs,
     };
 }
@@ -40,10 +51,11 @@ const buttonId = 'firefly-iii-export-transactions-button';
 
 function addButton() {
     const button = document.createElement("button");
+    button.id = buttonId;
     button.textContent = "Firefly III"
     button.addEventListener("click", async () => doScrape(), false);
     button.classList.add("btn-md", "btn-tertiary", "w-135-px", "d-flex-important", "my-auto", "print-hide")
-    document.body.append(button);
+    getButtonDestination().append(button);
 }
 
 function enableAutoRun() {
@@ -51,21 +63,30 @@ function enableAutoRun() {
         action: "get_auto_run_state",
     }).then(state => {
         if (state === AutoRunState.Transactions) {
-            doScrape()
-                .then((id: TransactionScrape) => chrome.runtime.sendMessage({
-                    action: "increment_auto_run_tx_account",
-                    lastAccountNameCompleted: id.pageAccount.name,
-                }, () => {
-                }))
-                .then(() => backToAccountsPage());
+            doScrape(true)
+                .then((id: TransactionScrape) => {
+                    if (isSingleAccountBank) {
+                        return chrome.runtime.sendMessage({
+                            action: "complete_auto_run_state",
+                            state: AutoRunState.Transactions,
+                        })
+                    } else {
+                        return chrome.runtime.sendMessage({
+                            action: "increment_auto_run_tx_account",
+                            lastAccountNameCompleted: id.pageAccount.name,
+                        }).then(() => backToAccountsPage())
+                    }
+                });
         }
     });
 }
 
+const txPage = 'accounts/main/details';
+
 // If your manifest.json allows your content script to run on multiple pages,
 // you can call this function more than once, or set the urlPath to "".
 runOnURLMatch(
-    'Transactions/History',
+    txPage,
     () => !!document.getElementById(buttonId),
     () => {
         pageAlreadyScraped = false;
@@ -74,6 +95,6 @@ runOnURLMatch(
 )
 
 runOnContentChange(
-    'Transactions/History',
+    txPage,
     enableAutoRun,
 )
