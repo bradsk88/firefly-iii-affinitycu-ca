@@ -1,19 +1,17 @@
 {
   "name": "Affinity CU -> Firefly III",
-  "key":  "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA3boKEUF+iVLslr+E8AIyk466e3tC4V/vPfRqxnnSVtgz7Xec6GwyPG09CK5v8rq7lolH6VDER7sjt3rHNnXAR4G6nO0paPqHkj6PRDDIoL7hknS1DWX0DGZC/Yvq1DSfcr3KE4++5XHOcQGMjHByeZ1B/nertLbkURdXsJG0ucM51MHAeKxjSpbqHpMx3PlB2TJJ/pZguH5shpbeNezFKrK3QIJv5nXSHaLIu71ID8ZIHkR8oZ4P3anbErguhVdVDg5vPSQ8xr7PkUnjXqSsl91GfEjuq/asS8xypl1hApzshVn/oKRAx7D4CHg0GQUF5pzt8w20OyMNAmTvNlaDzwIDAQAB",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA3boKEUF+iVLslr+E8AIyk466e3tC4V/vPfRqxnnSVtgz7Xec6GwyPG09CK5v8rq7lolH6VDER7sjt3rHNnXAR4G6nO0paPqHkj6PRDDIoL7hknS1DWX0DGZC/Yvq1DSfcr3KE4++5XHOcQGMjHByeZ1B/nertLbkURdXsJG0ucM51MHAeKxjSpbqHpMx3PlB2TJJ/pZguH5shpbeNezFKrK3QIJv5nXSHaLIu71ID8ZIHkR8oZ4P3anbErguhVdVDg5vPSQ8xr7PkUnjXqSsl91GfEjuq/asS8xypl1hApzshVn/oKRAx7D4CHg0GQUF5pzt8w20OyMNAmTvNlaDzwIDAQAB",
   "version": "1.0",
   "description": "Scrapes account and transaction data from Affinity Credit Union (Canada) into Firefly III",
   "permissions": [
     "storage",
     "tabs"
   ],
-  "externally_connectable": [
-    {
-      "ids": [
-        "kcghjdbnjdaabfigmmjgmgiaehjidpoh"
-      ]
-    }
-  ],
+  "externally_connectable": {
+    "ids": [
+      "kcghjdbnjdaabfigmmjgmgiaehjidpoh"
+    ]
+  },
   "options_page": "options.html",
   "optional_host_permissions": [
     "http://*/*",
@@ -24,16 +22,29 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://personal.affinitycu.ca/*"],
-      "js": ["./dist/auto.js"]
+      "matches": [
+        "https://personal.affinitycu.ca/*"
+      ],
+      "js": [
+        "./dist/auto.js"
+      ]
     },
     {
-      "matches": ["https://personal.affinitycu.ca/Accounts/Summary*"],
-      "js": ["./dist/accounts.js"]
+      "matches": [
+        "https://personal.affinitycu.ca/Accounts/Summary*"
+      ],
+      "js": [
+        "./dist/accounts.js"
+      ]
     },
     {
-      "matches": ["https://personal.affinitycu.ca/Transactions/History"],
-      "js": ["./dist/transactions.js", "./dist/opening.js"]
+      "matches": [
+        "https://personal.affinitycu.ca/Transactions/History"
+      ],
+      "js": [
+        "./dist/transactions.js",
+        "./dist/opening.js"
+      ]
     }
   ],
   "action": {

@@ -16,6 +16,16 @@ export async function getCurrentPageAccount(
     return allAccounts.find(acct => acct.attributes.name === accountName)!;
 }
 
+export function getButtonDestination(): Element {
+    // TODO: Find a DOM element on the page where the manual "export to firefly"
+    //  button should go.
+    return document.body;
+}
+
+export function isPageReadyForScraping(): boolean {
+    return true;
+}
+
 /**
  * @param pageAccount The Firefly III account for the current page
  */

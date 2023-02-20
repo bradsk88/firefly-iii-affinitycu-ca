@@ -1,16 +1,13 @@
-import {TransactionStore, TransactionTypeProperty} from "firefly-iii-typescript-sdk-fetch";
+import {TransactionStore} from "firefly-iii-typescript-sdk-fetch";
 import {AutoRunState} from "../background/auto_state";
 import {
     getButtonDestination,
-    getCurrentPageAccount,
-    getRowAmount,
-    getRowDate, getRowDesc,
-    getRowElements, isPageReadyForScraping
+    getCurrentPageAccount, isPageReadyForScraping,
+    scrapeTransactionsFromPage
 } from "./scrape/transactions";
 import {PageAccount} from "../common/accounts";
 import {runOnURLMatch} from "../common/buttons";
 import {runOnContentChange} from "../common/autorun";
-import {AccountRead} from "firefly-iii-typescript-sdk-fetch/dist/models/AccountRead";
 import {isSingleAccountBank} from "../extensionid";
 import {backToAccountsPage} from "./auto_run/transactions";
 import {debugLog} from "./auto_run/debug";
@@ -116,6 +113,6 @@ runOnContentChange(
 runOnContentChange(
     txPage,
     enableAutoRun,
-    () => document.querySelector('app-root')!,
+    undefined,
     'txAutoRun',
 );
