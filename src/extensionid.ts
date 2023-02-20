@@ -1,3 +1,4 @@
+export const debugAutoRun = false;
 export const bankDomain = 'affinitycu.ca';
 export const autoRunStartURL = 'https://personal.affinitycu.ca/Accounts/Summary';
 export const extensionPrimaryColorHex = '96c93d';
