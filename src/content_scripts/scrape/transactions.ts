@@ -2,6 +2,12 @@ import {TransactionStore, TransactionTypeProperty} from "firefly-iii-typescript-
 import {AccountRead} from "firefly-iii-typescript-sdk-fetch/dist/models/AccountRead";
 import {parseDate} from "../../common/dates";
 
+export function getButtonDestination(): Element {
+    // TODO: Find a DOM element on the page where the manual "export to firefly"
+    //  button should go.
+    return document.body;
+}
+
 /**
  * @param allAccounts The first page of accounts in your Firefly III instance
  */
@@ -16,11 +22,6 @@ export async function getCurrentPageAccount(
     return allAccounts.find(acct => acct.attributes.name === accountName)!;
 }
 
-export function getButtonDestination(): Element {
-    // TODO: Find a DOM element on the page where the manual "export to firefly"
-    //  button should go.
-    return document.body;
-}
 
 export function isPageReadyForScraping(): boolean {
     return true;
@@ -72,9 +73,8 @@ export function scrapeTransactionsFromPage(
 }
 
 export function findBackToAccountsPageButton(): HTMLElement {
-    // TODO: Put this in the base project
     // TODO: Once a single account's transactions have been scraped, we need to
     //  go back to the main accounts page to finish the auto run. Find an
-    //  element on the page that we can click on to go back.
+    //  element on the page that we can click on to go back. Example below.
     return document.querySelector('button.btn-icon-back')!;
 }

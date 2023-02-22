@@ -2,7 +2,8 @@ import {TransactionStore} from "firefly-iii-typescript-sdk-fetch";
 import {AutoRunState} from "../background/auto_state";
 import {
     getButtonDestination,
-    getCurrentPageAccount, isPageReadyForScraping,
+    getCurrentPageAccount,
+    isPageReadyForScraping,
     scrapeTransactionsFromPage
 } from "./scrape/transactions";
 import {PageAccount} from "../common/accounts";
