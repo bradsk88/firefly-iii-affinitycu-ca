@@ -3,9 +3,7 @@ import {AccountRead} from "firefly-iii-typescript-sdk-fetch/dist/models/AccountR
 import {parseDate} from "../../common/dates";
 
 export function getButtonDestination(): Element {
-    // TODO: Find a DOM element on the page where the manual "export to firefly"
-    //  button should go.
-    return document.body;
+    return document.querySelector("div.btn-drp-content > :last-child")!;
 }
 
 /**
@@ -41,7 +39,7 @@ export function scrapeTransactionsFromPage(
     const txRows = txs.querySelectorAll('div.table-row');
     const data = Array.from(txRows.values()).map((row, index) => {
         const date = row.children.item(0)!.textContent!.trim();
-        const desc = row.children.item(1)!.textContent!.trim();
+        const desc = row.children.item(1)!.textContent!.replace(/\n|\s\s+/g, ' ').trim();
         const amount = row.children.item(2)!.textContent!.trim();
 
         const tType = amount.startsWith("-") ? TransactionTypeProperty.Withdrawal : TransactionTypeProperty.Deposit;
