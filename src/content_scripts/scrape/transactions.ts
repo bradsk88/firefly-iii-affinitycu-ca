@@ -1,6 +1,7 @@
 import {TransactionStore, TransactionTypeProperty} from "firefly-iii-typescript-sdk-fetch";
 import {AccountRead} from "firefly-iii-typescript-sdk-fetch/dist/models/AccountRead";
 import {parseDate} from "../../common/dates";
+import {extensionBankName} from "../../extensionid";
 
 export function getButtonDestination(): Element {
     return document.querySelector("div.btn-drp-content > :last-child")!;
@@ -16,7 +17,7 @@ export async function getCurrentPageAccount(
     const div = headerDiv.getElementsByClassName("d-flex-tb")[0];
     const header = div.getElementsByTagName("h1")[0];
     const [_, ...accountNameParts] = header.textContent!.split(' - ');
-    const accountName = accountNameParts.join(' - ');
+    const accountName = `${extensionBankName} - ${accountNameParts.join(' - ')}`;
     return allAccounts.find(acct => acct.attributes.name === accountName)!;
 }
 
