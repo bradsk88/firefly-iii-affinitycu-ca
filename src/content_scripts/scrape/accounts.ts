@@ -1,5 +1,6 @@
 import {sha512} from "js-sha512";
 import {OpeningBalance} from "../../background/firefly_export";
+import {debugLog} from "../auto_run/debug";
 
 export function getButtonDestination(): Element {
     // TODO: Find a DOM element on the page where the manual "export to firefly"
@@ -31,8 +32,10 @@ export function getAccountNumber(
 export function getAccountName(
     accountElement: Element,
 ): string {
-    return accountElement.attributes.getNamedItem('aria-label')!.value
+    let name = accountElement.attributes.getNamedItem('aria-label')!.value
         .split('Transaction History for ')[1];
+    console.debug('name', name);
+    return name;
 }
 
 export function getOpeningBalance(

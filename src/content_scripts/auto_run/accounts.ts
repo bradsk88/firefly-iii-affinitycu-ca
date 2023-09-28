@@ -1,6 +1,6 @@
 import {AutoRunState} from "../../background/auto_state";
 import {getAccountElements, getAccountName, shouldSkipScrape} from "../scrape/accounts";
-import {debugAutoRun, isSingleAccountBank} from "../../extensionid";
+import {debugAutoRun, extensionBankName, isSingleAccountBank} from "../../extensionid";
 import {debugHighlight, showDebug} from "./debug";
 import {navigating, setNavigating} from "../accounts";
 
@@ -19,7 +19,9 @@ function findNextAccountElement(accountName: string): Element | undefined {
         if (foundScraped) {
             return button;
         }
-        if (getAccountName(button) === accountName) {
+        let scrapedName = getAccountName(button);
+        let scrapedWithPrefix = `${extensionBankName} - ${scrapedName}`;
+        if (scrapedName === accountName || scrapedWithPrefix === accountName) {
             foundScraped = true;
         }
     }
