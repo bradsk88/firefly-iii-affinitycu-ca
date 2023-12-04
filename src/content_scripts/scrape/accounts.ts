@@ -33,7 +33,7 @@ export function getAccountName(
     accountElement: Element,
 ): string {
     let name = accountElement.attributes.getNamedItem('aria-label')!.value
-        .split('Transaction History for ')[1];
+        .split(' for ')[1];
     console.debug('name', name);
     return name;
 }
