@@ -5,7 +5,8 @@
   "description": "Scrapes account and transaction data from Affinity Credit Union (Canada) into Firefly III",
   "permissions": [
     "storage",
-    "tabs"
+    "tabs",
+    "contextMenus"
   ],
   "externally_connectable": {
     "ids": [

@@ -34,7 +34,7 @@ export function getAccountName(
 ): string {
     let name = accountElement.attributes.getNamedItem('aria-label')!.value
         .split(' for ')[1];
-    console.debug('name', name);
+    debugLog('name', name);
     return name;
 }
 

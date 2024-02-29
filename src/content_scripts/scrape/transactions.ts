@@ -1,14 +1,14 @@
-import {TransactionStore, TransactionTypeProperty} from "firefly-iii-typescript-sdk-fetch";
 import {AccountRead} from "firefly-iii-typescript-sdk-fetch/dist/models/AccountRead";
 import {parseDate} from "../../common/dates";
+import {priceFromString} from "../../common/prices";
 import {extensionBankName} from "../../extensionid";
 
 export function getButtonDestination(): Element {
-    return document.querySelector("div.btn-drp-content > :last-child")!;
+    return document.querySelector('.pure-g.notification-info')!;
 }
 
 /**
- * @param allAccounts The first page of accounts in your Firefly III instance
+ * @param accounts The first page of account in your Firefly III instance
  */
 export async function getCurrentPageAccount(
     allAccounts: AccountRead[],
@@ -21,59 +21,38 @@ export async function getCurrentPageAccount(
     return allAccounts.find(acct => acct.attributes.name === accountName)!;
 }
 
-
 export function isPageReadyForScraping(): boolean {
     return true;
 }
 
-/**
- * @param pageAccount The Firefly III account for the current page
- */
-export function scrapeTransactionsFromPage(
-    pageAccount: AccountRead,
-): TransactionStore[] {
+export function getRowElements(): Element[] {
     const table = document.querySelectorAll('div[aria-label="Transactions"] > div.table-body');
     const txs: Element = table.values().next()?.value;
     if (!txs) {
         return [];
     }
-    const txRows = txs.querySelectorAll('div.table-row');
-    const data = Array.from(txRows.values()).map((row, index) => {
-        const date = row.children.item(0)!.textContent!.trim();
-        const desc = row.children.item(1)!.textContent!.replace(/\n|\s\s+/g, ' ').trim();
-        const amount = row.children.item(2)!.textContent!.trim();
+    return Array.from(txs.querySelectorAll('div.table-row'));
+}
 
-        const tType = amount.startsWith("-") ? TransactionTypeProperty.Withdrawal : TransactionTypeProperty.Deposit;
+export function getRowDate(el: Element): Date {
+    return parseDate(el.children.item(0)!.textContent!.trim());
+}
 
-        const absAmt = amount.replace('$', '').replace('-', '').replace(',', '');
+function isRowLoading(r: Element): boolean {
+    return false;
+}
 
-        // FIXME: Get source ID from account name
-        const sourceId = tType === TransactionTypeProperty.Withdrawal ? pageAccount.id : undefined;
-        const destId = tType === TransactionTypeProperty.Deposit ? pageAccount.id : undefined;
+export function getRowAmount(r: Element, pageAccount: AccountRead): number {
+    if (isRowLoading(r)) {
+        throw new Error("Page is not ready for scraping")
+    }
+    return priceFromString(r.children.item(2)!.textContent!.trim());
+}
 
-        const tx: TransactionStore = {
-            errorIfDuplicateHash: true,
-            transactions: [{
-                type: tType,
-                sourceId: sourceId,
-                destinationId: destId,
-                date: parseDate(date),
-                amount: absAmt,
-                description: desc,
-                currencyCode: 'CAD',
-            }],
-        }
-        return tx;
-    });
-    return data.map(ts => {
-        ts.transactions = ts.transactions.filter(t => t.amount.trim() !== "")
-        return ts;
-    });
+export function getRowDesc(r: Element): string {
+    return r.children.item(1)!.textContent!.replace(/\n|\s\s+/g, ' ').trim();
 }
 
 export function findBackToAccountsPageButton(): HTMLElement {
-    // TODO: Once a single account's transactions have been scraped, we need to
-    //  go back to the main accounts page to finish the auto run. Find an
-    //  element on the page that we can click on to go back. Example below.
     return document.querySelector('button.btn-icon-back')!;
 }
