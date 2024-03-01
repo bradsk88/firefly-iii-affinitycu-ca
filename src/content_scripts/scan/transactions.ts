@@ -122,6 +122,9 @@ export class FireflyTransactionUIAdder {
                 is_auto_run: false,
                 value: [{
                     applyRules: true,
+                    // TODO: [BASE] Is this exactly the same as the tx scraped by auto-run?
+                    //  It seems to be producing a slightly different hash and thus
+                    //  causing duplication.
                     errorIfDuplicateHash: false,
                     transactions: [{
                         amount: row.tx.amount,
